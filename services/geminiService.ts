@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { AnalysisResult, ImageFormat } from '../types';
+import { AnalysisResult, ImageFormat, AIResolution } from '../types';
 
 const getClient = () => {
     const apiKey = process.env.API_KEY;
@@ -85,11 +85,52 @@ export const analyzeImageForSettings = async (file: File): Promise<AnalysisResul
 
     } catch (error) {
         console.error("Gemini Analysis Error:", error);
-        // Fallback defaults
         return {
             suggestedFormat: 'image/jpeg',
             suggestedQuality: 0.8,
             reasoning: "AI Analysis failed, defaulting to standard JPEG settings."
         };
     }
+};
+
+export const upscaleImageWithAI = async (file: File, resolution: AIResolution): Promise<Blob> => {
+    const ai = getClient();
+    const imagePart = await fileToGenerativePart(file);
+
+    // gemini-3-pro-image-preview is required for image editing/generation
+    const response = await ai.models.generateContent({
+        model: 'gemini-3-pro-image-preview',
+        contents: {
+            parts: [
+                imagePart,
+                {
+                    text: 'Upscale this image to high resolution. Increase detail, sharpen edges, and improve clarity while maintaining the exact subject matter and composition of the original.',
+                },
+            ],
+        },
+        config: {
+            imageConfig: {
+                imageSize: resolution // "2K" or "4K"
+            }
+        }
+    });
+
+    // Extract image from response
+    // The response for images usually has the image in the parts
+    const parts = response.candidates?.[0]?.content?.parts;
+    if (!parts) throw new Error("No content generated");
+
+    for (const part of parts) {
+        if (part.inlineData && part.inlineData.data) {
+             const byteCharacters = atob(part.inlineData.data);
+             const byteNumbers = new Array(byteCharacters.length);
+             for (let i = 0; i < byteCharacters.length; i++) {
+                 byteNumbers[i] = byteCharacters.charCodeAt(i);
+             }
+             const byteArray = new Uint8Array(byteNumbers);
+             return new Blob([byteArray], { type: 'image/png' }); // Gemini usually returns PNG
+        }
+    }
+
+    throw new Error("No image data found in response");
 };

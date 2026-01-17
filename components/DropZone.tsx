@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Image as ImageIcon, Plus } from 'lucide-react';
+import { Upload, FileArchive, Plus } from 'lucide-react';
 
 interface DropZoneProps {
   onFilesDropped: (files: File[]) => void;
@@ -23,12 +23,11 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDropped, compact }) =
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const validFiles = Array.from(e.dataTransfer.files).filter((file: File) => 
-        file.type.startsWith('image/')
-      );
-      if (validFiles.length > 0) {
-        onFilesDropped(validFiles);
+    
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length > 0) {
+        onFilesDropped(files);
       }
     }
   };
@@ -39,12 +38,10 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDropped, compact }) =
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const validFiles = Array.from(e.target.files).filter((file: File) => 
-        file.type.startsWith('image/')
-      );
-      onFilesDropped(validFiles);
+      const files = Array.from(e.target.files);
+      onFilesDropped(files);
     }
-    // Reset value so same files can be selected again if needed
+    // Reset value
     if (inputRef.current) {
         inputRef.current.value = '';
     }
@@ -68,13 +65,12 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDropped, compact }) =
         <input 
           ref={inputRef}
           type="file" 
-          multiple 
-          accept="image/*" 
+          multiple
           className="hidden" 
           onChange={handleInputChange}
         />
         <Plus className="w-6 h-6 text-slate-400 mb-1" />
-        <span className="text-sm text-slate-400 font-medium">Add more</span>
+        <span className="text-sm text-slate-400 font-medium">Add files</span>
       </div>
     );
   }
@@ -97,8 +93,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDropped, compact }) =
       <input 
         ref={inputRef}
         type="file" 
-        multiple 
-        accept="image/*" 
+        multiple
         className="hidden" 
         onChange={handleInputChange}
       />
@@ -110,16 +105,16 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDropped, compact }) =
         {isDragging ? (
            <Upload className="w-10 h-10 text-blue-400" />
         ) : (
-           <ImageIcon className="w-10 h-10 text-slate-400" />
+           <FileArchive className="w-10 h-10 text-slate-400" />
         )}
       </div>
       
       <h3 className="text-xl font-semibold text-slate-200 mb-2">
-        {isDragging ? 'Drop images here' : 'Drag & Drop your images'}
+        {isDragging ? 'Drop files here' : 'Drag & Drop your files'}
       </h3>
       <p className="text-slate-400 text-center max-w-sm">
-        Support for JPEG, PNG, WEBP. <br/>
-        Batch processing supported.
+        Images (JPG, PNG, WEBP), Code (JSON, JS, CSS), Documents (PDF, TXT). <br/>
+        All files processed locally.
       </p>
     </div>
   );
