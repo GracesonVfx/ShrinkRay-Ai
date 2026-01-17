@@ -1,0 +1,5 @@
+{
+  "name": "ShrinkRay AI",
+  "description": "A smart, batch image compression tool that uses client-side processing for privacy and speed, augmented by Gemini AI to intelligently suggest optimal compression settings based on image content.",
+  "requestFramePermissions": []
+}
